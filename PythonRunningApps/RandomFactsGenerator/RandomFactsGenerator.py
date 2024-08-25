@@ -5,9 +5,7 @@ from ctypes import wintypes
 import requests
 import webbrowser
 import os
-
-# Define the path where you want to save fact.txt
-FACT_FILE_PATH = r"C:\Users\gaura\Desktop\PythonRunningApps\RandomFactsGenerator\fact.txt"
+import random
 
 def apply_rounded_corners(root, radius):
     HRGN = ctypes.c_void_p
@@ -17,7 +15,7 @@ def apply_rounded_corners(root, radius):
 
 def count_saved_facts():
     try:
-        with open(FACT_FILE_PATH, "r") as file:
+        with open("fact.txt", "r") as file:
             return len(file.readlines())
     except FileNotFoundError:
         return 0  # Return 0 if the file doesn't exist yet
@@ -54,8 +52,9 @@ def set_static_position(event=None):
     update_coordinates()
 
 def open_fact_file(event=None):
-    if os.path.exists(FACT_FILE_PATH):
-        webbrowser.open(FACT_FILE_PATH)
+    file_path = os.path.abspath("fact.txt")
+    if os.path.exists(file_path):
+        webbrowser.open(file_path)
     else:
         save_status_label.config(text="Fact file not found.", fg="#ff0000")
 
@@ -77,24 +76,60 @@ def adjust_font_size(text):
     words_count = len(text.split())
     return 13
 
-def generate_new_fact():
+def toggle_fact_mode():
+    global current_mode
+    if current_mode == "New Random":
+        current_mode = "Saved"
+        toggle_button.config(text="Mode: Saved", bg='#4CAF50')  # Green for Saved mode
+        load_saved_fact()
+    else:
+        current_mode = "New Random"
+        toggle_button.config(text="Mode: New Random", bg='#2196F3')  # Blue for New Random mode
+        generate_new_fact()
+
+def load_saved_fact():
     global fact_saved
-    fact_saved = False  # Reset the fact_saved flag
-    new_fact_text = None
-    save_button.config(bg='#808080', state='disabled')  # Disable save button at the start
+    try:
+        with open("fact.txt", "r") as file:
+            facts = file.readlines()
+        if facts:
+            fact = random.choice(facts).strip()
+            fact_label.config(text=fact)
+            fact_font_size = adjust_font_size(fact)
+            fact_label.config(font=("Trebuchet MS", fact_font_size))
+            fact_saved = True
+            update_save_button()
+            fade_out_saved_message()
+        else:
+            fact_label.config(text="No saved facts found.")
+            fact_saved = False
+            update_save_button()
+    except FileNotFoundError:
+        fact_label.config(text="No saved facts file found.")
+        fact_saved = False
+        update_save_button()
 
-    while new_fact_text is None:
-        new_fact_text = fetch_random_fact()
-        if new_fact_text is None or isinstance(new_fact_text, Exception):
-            save_status_label.config(text="Failed to fetch a new fact", fg="#ff0000")
-            return  # Maintain the button disabled if no new fact is fetched
+def generate_new_fact():
+    global fact_saved, current_mode
+    if current_mode == "New Random":
+        fact_saved = False  # Reset the fact_saved flag
+        new_fact_text = None
+        save_button.config(bg='#808080', state='disabled')  # Disable save button at the start
 
-    if new_fact_text:
-        fact_label.config(text=new_fact_text)
-        fact_font_size = adjust_font_size(new_fact_text)
-        fact_label.config(font=("Trebuchet MS", fact_font_size))
-        fade_out_saved_message()  # Clear the saved status message
-        save_button.config(bg='#007bff', state='normal')  # Re-enable the save button
+        while new_fact_text is None:
+            new_fact_text = fetch_random_fact()
+            if new_fact_text is None or isinstance(new_fact_text, Exception):
+                save_status_label.config(text="Failed to fetch a new fact", fg="#ff0000")
+                return  # Maintain the button disabled if no new fact is fetched
+
+        if new_fact_text:
+            fact_label.config(text=new_fact_text)
+            fact_font_size = adjust_font_size(new_fact_text)
+            fact_label.config(font=("Trebuchet MS", fact_font_size))
+            fade_out_saved_message()  # Clear the saved status message
+            save_button.config(bg='#007bff', state='normal')  # Re-enable the save button
+    else:
+        load_saved_fact()
 
     update_save_button()
 
@@ -106,7 +141,7 @@ def save_fact_to_file():
     if not fact_saved:
         fact_text = fact_label.cget("text")
         try:
-            with open(FACT_FILE_PATH, "r") as file:
+            with open("fact.txt", "r") as file:
                 existing_facts = file.readlines()
             # Check if the current fact is in the list of existing facts
             if any(fact_text.strip() + '\n' == existing_fact for existing_fact in existing_facts):
@@ -116,7 +151,7 @@ def save_fact_to_file():
             # If the file doesn't exist, continue to create it below
             pass
 
-        with open(FACT_FILE_PATH, "a") as file:
+        with open("fact.txt", "a") as file:
             file.write(fact_text + '\n')
         save_status_label.config(text="Fact Saved!", fg="#b66d20")
         fact_saved = True
@@ -137,14 +172,20 @@ root.overrideredirect(True)
 root.configure(bg='#1e1e1e')
 
 fact_saved = False
+current_mode = "New Random"
 
 title_bar = Frame(root, bg='#000000', height=30, relief='raised')
 title_bar.pack(side="top", fill="x")
 title_bar.bind("<Button-1>", on_press)
 title_bar.bind("<B1-Motion>", on_drag)
 
-title_label = Label(title_bar, text="Facts", fg="white", bg='#030303', font=("Trebuchet MS", 12, 'bold'))
-title_label.pack(side="top", fill="x", pady=5)
+title_label = Label(title_bar, text="Facts", fg="white", bg='#000000', font=("Trebuchet MS", 12, 'bold'))
+title_label.pack(side="left", padx=5, pady=5)
+
+toggle_button = Button(title_bar, text="Mode: New Random", bg='#2196F3', fg="white", command=toggle_fact_mode, 
+                       cursor="hand2", borderwidth=0, highlightthickness=0, padx=5, pady=2,
+                       font=("Trebuchet MS", 8, 'bold'))
+toggle_button.pack(side="right", padx=5, pady=3)
 
 fact_frame = Frame(root, bg="#1e1e1e")
 fact_frame.pack(side="top", fill="both", expand=True)
@@ -181,7 +222,8 @@ control_frame.pack(side="bottom", fill="x")
 set_static_position()
 root.bind("<s>", set_static_position)
 
-generate_button = Button(control_frame, text="Generate Fact", bg='#b66d20', fg="white", command=generate_new_fact, cursor="hand2", borderwidth=0, highlightthickness=0, padx=10, pady=5)
+generate_button = Button(control_frame, text="Generate/Next Fact", bg='#b66d20', fg="white", command=generate_new_fact, 
+                         cursor="hand2", borderwidth=0, highlightthickness=0, padx=10, pady=5)
 generate_button.pack(side="left", padx=10, pady=0.5)
 
 save_button = Button(control_frame, text="Save Fact", bg='#007bff', fg="white", command=save_fact_to_file, cursor="hand2", borderwidth=0, highlightthickness=0, padx=10, pady=5)
