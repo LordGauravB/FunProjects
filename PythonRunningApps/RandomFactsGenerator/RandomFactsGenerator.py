@@ -7,6 +7,9 @@ import webbrowser
 import os
 import random
 
+# Specify the path for saving facts
+FACT_FILE_PATH = r"C:\Users\gaura\Desktop\PythonRunningApps\RandomFactsGenerator\fact.txt"
+
 def apply_rounded_corners(root, radius):
     HRGN = ctypes.c_void_p
     hWnd = ctypes.wintypes.HWND(int(root.frame(), 16))
@@ -15,7 +18,7 @@ def apply_rounded_corners(root, radius):
 
 def count_saved_facts():
     try:
-        with open("fact.txt", "r") as file:
+        with open(FACT_FILE_PATH, "r") as file:
             return len(file.readlines())
     except FileNotFoundError:
         return 0  # Return 0 if the file doesn't exist yet
@@ -52,9 +55,8 @@ def set_static_position(event=None):
     update_coordinates()
 
 def open_fact_file(event=None):
-    file_path = os.path.abspath("fact.txt")
-    if os.path.exists(file_path):
-        webbrowser.open(file_path)
+    if os.path.exists(FACT_FILE_PATH):
+        webbrowser.open(FACT_FILE_PATH)
     else:
         save_status_label.config(text="Fact file not found.", fg="#ff0000")
 
@@ -90,7 +92,7 @@ def toggle_fact_mode():
 def load_saved_fact():
     global fact_saved
     try:
-        with open("fact.txt", "r") as file:
+        with open(FACT_FILE_PATH, "r") as file:
             facts = file.readlines()
         if facts:
             fact = random.choice(facts).strip()
@@ -141,17 +143,20 @@ def save_fact_to_file():
     if not fact_saved:
         fact_text = fact_label.cget("text")
         try:
-            with open("fact.txt", "r") as file:
+            with open(FACT_FILE_PATH, "r") as file:
                 existing_facts = file.readlines()
             # Check if the current fact is in the list of existing facts
             if any(fact_text.strip() + '\n' == existing_fact for existing_fact in existing_facts):
                 save_status_label.config(text="Fact already saved.", fg="#ff0000")
                 return
         except FileNotFoundError:
-            # If the file doesn't exist, continue to create it below
+            # If the file doesn't exist, it will be created when we write to it
             pass
 
-        with open("fact.txt", "a") as file:
+        # Ensure the directory exists
+        os.makedirs(os.path.dirname(FACT_FILE_PATH), exist_ok=True)
+
+        with open(FACT_FILE_PATH, "a") as file:
             file.write(fact_text + '\n')
         save_status_label.config(text="Fact Saved!", fg="#b66d20")
         fact_saved = True
