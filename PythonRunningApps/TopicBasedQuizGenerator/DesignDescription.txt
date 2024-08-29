@@ -1,0 +1,146 @@
+- Create a new widget for DS, ML, AI, DE, DM and more in Tkinter.
+  - Pick a topic, ask questions, reveal answer.
+    - Correct Option : Wrong/Correct
+    - User wont need to type in an answer just pick worng or correct
+  - Pick number of Questions for that topic
+     - Add a progress bar on the bottom when the quiz starts
+  - How many was correct out of 10
+     - Keep track of this in a Database (SSMS)
+  - Keep a flag (Red, Yellow and Green)
+     - Red : Wrong Answer previously
+     - Amber : Wasn't correct 5 times in a row
+     - Green : Got it right 5 times in a row
+  - Keep track of how many questions were shown from the total
+     - Add a progress bar on the bottom in Home page of this
+  - Keep track of how fast you answered each question (new time for each question)
+     - Only store if it's new Record and show new record on screen in green
+  - Another page for analytics and charts
+    - Number of total question from all topics
+    - Number of total question for specific topic
+    - Wrong/Correct Ratio from all topics
+    - Wrong/Correct Ratio for each topic
+    - How many questions were answered each day
+    - Wrong/Correct Ratio each day for all topics
+    - Highest Correct answer streak
+    - Visualize streak trends over time.
+    - Visualize scores trends over time for 5 question quiz
+    - Visualize scores trends over time for 10 question quiz 
+    - Visualize scores trends over time for 15 question quiz
+    - Visualize scores trends over time for 50 question quiz
+  - Add Favourite star option for each question
+    - Function to also choose favourited questions only
+ - Make you you capture datetime of each question and when it was last seen
+    - If the question has not been seen for over a month then mark that as LTNS
+       - LTNS questions should be grouped as LSTN topic.
+ - Add another page for Rewards and achievement
+    - First 10 Correct Anseers in a Row
+    - First 100  Correct Anseers in a Row
+    - Reached 70% Correct/Wrong Ratio for specifc topics
+    - Reached 80% Correct/Wrong Ratio for specifc topics
+    - Reached 90% Correct/Wrong Ratio for specifc topics
+    - Reached 70% Correct/Wrong Ratio for all topics
+    - Reached 80% Correct/Wrong Ratio for all topics
+    - Reached 90% Correct/Wrong Ratio for all topics
+    - All Qestions correct in a 5  question quiz
+    - All Qestions correct in a 10 question quiz
+    - All Qestions correct in a 15 question quiz
+    - All Qestions correct in a 50 question quiz
+- Quiz History and Review
+   - Let users review their past quizzes and scores
+- Dynamic Quiz Modes
+  - Allow user to build their own Quiz based on keywords, sub-topics for the question
+  - Allow user to choose top 10 questions that were answered incorrectly the most
+  - Survival Mode: Introduce a survival quiz mode where users must answer questions correctly to continue. 
+                             The quiz ends when a user gets a certain number of questions wrong, 
+                             Highest Streak of this should be captured in Analytics.
+
+
+erDiagram
+    USER {
+        int user_id PK
+        string username
+        string email
+        datetime created_at
+    }
+    TOPIC {
+        int topic_id PK
+        string topic_name
+    }
+    QUESTION {
+        int question_id PK
+        int topic_id FK
+        string question_text
+        string correct_answer
+        string keywords
+        string subtopics
+        boolean is_favorite
+        datetime last_seen
+        boolean is_ltns
+        int difficulty_level
+        int incorrect_count
+        string flag
+    }
+    QUIZ_SESSION {
+        int session_id PK
+        int user_id FK
+        int topic_id FK
+        datetime start_time
+        datetime end_time
+        int total_questions
+        int correct_answers
+        string quiz_type
+        int streak
+    }
+    USER_ANSWER {
+        int answer_id PK
+        int session_id FK
+        int question_id FK
+        boolean is_correct
+        float answer_time
+        datetime answered_at
+    }
+    ACHIEVEMENT {
+        int achievement_id PK
+        string achievement_name
+        string description
+        int threshold
+    }
+    USER_ACHIEVEMENT {
+        int user_id FK
+        int achievement_id FK
+        datetime achieved_at
+    }
+    USER_TOPIC_STATS {
+        int stat_id PK
+        int user_id FK
+        int topic_id FK
+        int total_questions
+        int total_answered
+        int total_correct
+        float progress_percentage
+        int highest_streak
+        float avg_answer_time
+        datetime last_quiz_date
+    }
+    QUESTION_HISTORY {
+        int history_id PK
+        int question_id FK
+        int user_id FK
+        datetime viewed_at
+        boolean was_correct
+        float answer_time
+    }
+
+    USER ||--o{ QUIZ_SESSION : "participates in"
+    USER ||--o{ USER_ACHIEVEMENT : "earns"
+    USER ||--o{ USER_TOPIC_STATS : "has"
+    USER ||--o{ QUESTION_HISTORY : "tracks"
+    TOPIC ||--o{ QUESTION : "contains"
+    TOPIC ||--o{ USER_TOPIC_STATS : "tracked in"
+    TOPIC ||--o{ QUIZ_SESSION : "belongs to"
+    QUIZ_SESSION ||--|{ USER_ANSWER : "includes"
+    QUESTION ||--o{ USER_ANSWER : "answered in"
+    QUESTION ||--o{ QUESTION_HISTORY : "recorded in"
+    ACHIEVEMENT ||--o{ USER_ACHIEVEMENT : "earned by"
+
+Improve the accuracy and clarity of this description and am I missing anything in the ERD as per the descrription without adding addional features and out of 10 what would you mark this ERD design as per description?
