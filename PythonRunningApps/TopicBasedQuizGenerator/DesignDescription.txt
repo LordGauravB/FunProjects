@@ -133,17 +133,37 @@ erDiagram
         boolean was_correct
         float answer_time
     }
+    USER_QUESTION_STREAK {
+        int streak_id PK
+        int user_id FK
+        int question_id FK
+        int current_correct_streak
+        int current_incorrect_streak
+        int max_correct_streak
+        int max_incorrect_streak
+        datetime last_answered
+    }
 
     USER ||--o{ QUIZ_SESSION : "participates in"
     USER ||--o{ USER_ACHIEVEMENT : "earns"
     USER ||--o{ USER_TOPIC_STATS : "has"
     USER ||--o{ QUESTION_HISTORY : "tracks"
+    USER ||--o{ USER_QUESTION_STREAK : "has"
+    USER ||--o{ QUIZ_SESSION : "participates in"
     TOPIC ||--o{ QUESTION : "contains"
     TOPIC ||--o{ USER_TOPIC_STATS : "tracked in"
     TOPIC ||--o{ QUIZ_SESSION : "belongs to"
     QUIZ_SESSION ||--|{ USER_ANSWER : "includes"
+    QUIZ_SESSION ||--|{ USER_ANSWER : "includes"
     QUESTION ||--o{ USER_ANSWER : "answered in"
     QUESTION ||--o{ QUESTION_HISTORY : "recorded in"
+    QUESTION ||--o{ USER_QUESTION_STREAK : "tracked in"
+    QUESTION ||--o{ USER_ANSWER : "answered in"
     ACHIEVEMENT ||--o{ USER_ACHIEVEMENT : "earned by"
+
+Show me this ER diagram and state what it might be trying to achieve
+
+
+
 
 Improve the accuracy and clarity of this description and am I missing anything in the ERD as per the descrription without adding addional features and out of 10 what would you mark this ERD design as per description?
