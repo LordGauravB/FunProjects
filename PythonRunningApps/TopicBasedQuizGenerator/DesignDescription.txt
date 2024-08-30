@@ -61,6 +61,9 @@ erDiagram
         string username
         string email
         datetime created_at
+        int current_streak
+        int highest_streak
+        datetime last_streak_date
     }
     TOPIC {
         int topic_id PK
@@ -89,7 +92,7 @@ erDiagram
         int total_questions
         int correct_answers
         string quiz_type
-        int streak
+        int session_streak
     }
     USER_ANSWER {
         int answer_id PK
