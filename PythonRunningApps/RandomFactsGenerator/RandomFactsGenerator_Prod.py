@@ -353,9 +353,9 @@ root.overrideredirect(True)
 root.configure(bg='#1e1e1e')
 
 # Load star icons
-white_star_icon = ImageTk.PhotoImage(Image.open("Resources/White-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
-gold_star_icon = ImageTk.PhotoImage(Image.open("Resources/Gold-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
-black_star_icon = ImageTk.PhotoImage(Image.open("Resources/Black-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
+white_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/White-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
+gold_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/Gold-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
+black_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/Black-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
 
 # Title bar
 title_bar = tk.Frame(root, bg='#000000', height=30, relief='raised')
@@ -395,7 +395,7 @@ star_button = tk.Button(fact_frame, image=white_star_icon, bg='#1e1e1e', command
 star_button.place(relx=1.0, rely=0, anchor="ne", x=-30, y=5)
 
 # Speaker button
-speaker_icon = ImageTk.PhotoImage(Image.open("Resources/speaker_icon.png").resize((20, 20), Image.Resampling.LANCZOS))
+speaker_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/speaker_icon.png").resize((20, 20), Image.Resampling.LANCZOS))
 speaker_button = tk.Button(fact_frame, image=speaker_icon, bg='#1e1e1e', command=speak_fact, 
                            cursor="hand2", borderwidth=0, highlightthickness=0)
 speaker_button.image = speaker_icon
