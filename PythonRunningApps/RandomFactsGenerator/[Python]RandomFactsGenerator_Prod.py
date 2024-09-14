@@ -21,12 +21,7 @@ MODES = ["API", "New Random", "Saved"]
 fact_saved = False
 x_window, y_window = 0, 0
 current_fact_id = None
-
-def on_focus_in(event):
-    root.attributes('-alpha', 1.0)
-
-def on_focus_out(event):
-    root.attributes('-alpha', 0.65)
+current_saved_fact_id = None
 
 def apply_rounded_corners(root, radius):
     hWnd = wintypes.HWND(int(root.frame(), 16))
@@ -47,9 +42,10 @@ def execute_query(query, params=None, fetch=True):
 def count_saved_facts():
     return execute_query("SELECT COUNT(*) FROM SavedFacts")[0][0]
 
-def update_ui_elements():
-    update_coordinates()
-    update_fact_count()
+def update_ui():
+        update_coordinates()
+        update_fact_count()
+        root.after(100, update_ui)
 
 def update_fact_count():
     num_facts = count_saved_facts()
@@ -69,7 +65,7 @@ def update_coordinates():
 def on_drag(event):
     x, y = event.x_root - x_window, event.y_root - y_window
     root.geometry(f"+{x}+{y}")
-    update_coordinates()
+    coordinate_label.config(text=f"Coordinates: {x}, {y}")
 
 def set_static_position(event=None):
     root.geometry("-1930+7")
@@ -221,10 +217,11 @@ def toggle_save_fact():
     update_fact_count()
 
 def fetch_saved_fact():
+    global current_saved_fact_id
     category = category_var.get()
     if category == "Random":
         query = """
-            SELECT TOP 1 f.FactText 
+            SELECT TOP 1 sf.SavedFactID, f.FactText, sf.MasteryLevel
             FROM SavedFacts sf 
             JOIN Facts f ON sf.FactID = f.FactID 
             ORDER BY NEWID()
@@ -232,7 +229,7 @@ def fetch_saved_fact():
         fact = execute_query(query)
     else:
         query = """
-            SELECT TOP 1 f.FactText 
+            SELECT TOP 1 sf.SavedFactID, f.FactText, sf.MasteryLevel
             FROM SavedFacts sf 
             JOIN Facts f ON sf.FactID = f.FactID 
             JOIN Categories c ON f.CategoryID = c.CategoryID
@@ -241,16 +238,24 @@ def fetch_saved_fact():
         """
         fact = execute_query(query, (category,))
     
-    return fact[0][0] if fact else "No saved facts found for the selected category."
+    if fact:
+        current_saved_fact_id, fact_text, mastery_level = fact[0]
+        update_mastery_progress(mastery_level)
+        return fact_text
+    return "No saved facts found for the selected category."
 
 def generate_new_fact():
     global fact_saved, current_fact_id, current_api_fact
     current_mode = mode_var.get()
     current_category = category_var.get()
     
+    # Clear existing fact
+    fact_label.config(text="")
+    save_status_label.config(text="")
+    
     if current_mode == "API":
         new_fact_text = fetch_api_fact()
-        current_fact_id = None  # Reset current_fact_id for API facts
+        current_fact_id = None
         fact_saved = False
     elif current_mode == "New Random":
         new_fact_text = fetch_db_fact(current_category)
@@ -261,30 +266,11 @@ def generate_new_fact():
 
     if new_fact_text:
         fact_label.config(text=new_fact_text, font=("Trebuchet MS", adjust_font_size(new_fact_text)))
-        fade_out_saved_message()
     else:
         fact_label.config(text="No fact found. Try a different category or mode.", font=("Trebuchet MS", 12))
     
     update_star_icon()
-
-def toggle_mode(event=None):
-    current_index = MODES.index(mode_var.get())
-    next_mode = MODES[(current_index + 1) % len(MODES)]
-    mode_var.set(next_mode)
-    mode_button.config(text=f"Mode: {next_mode}")
-    update_category_dropdown()
-    generate_new_fact()
-
-    if next_mode == "API":
-        category_var.set("Unavailable")
-        category_dropdown.config(state="disabled")
-    else:
-        load_categories(next_mode)
-        category_var.set("Random")
-        category_dropdown.config(state="readonly")
-
-    generate_new_fact()
-    update_category_dropdown()
+    root.update_idletasks()
 
 def load_categories(mode):
     global CATEGORIES
@@ -305,9 +291,6 @@ def load_categories(mode):
     categories = execute_query(query)
     CATEGORIES = [category[0] for category in categories] if categories else ["No Categories Available"]
     CATEGORIES.insert(0, "Random")  # Add "Random" as the first option
-
-def fade_out_saved_message():
-    save_status_label.config(text="", fg="#1e1e1e")
 
 def adjust_font_size(text):
     return max(8, min(13, int(13 - (len(text.split()) - 15) * 0.2)))
@@ -340,6 +323,45 @@ def update_category_dropdown(event=None):
         category_var.set("Random")
         category_dropdown.config(state="readonly")
 
+def toggle_mode(event=None):
+    current_index = MODES.index(mode_var.get())
+    next_mode = MODES[(current_index + 1) % len(MODES)]
+    
+    # Immediately hide all elements
+    fact_label.pack_forget()
+    mastery_frame.pack_forget()
+    
+    mode_var.set(next_mode)
+    mode_button.config(text=f"Mode: {next_mode}")
+    
+    # Generate new fact
+    generate_new_fact()
+    # Force update
+    root.update_idletasks()
+    
+    # Update category dropdown
+    update_category_dropdown()
+    
+    # Show elements based on new mode
+    fact_label.pack(side="top", fill="both", expand=True)
+    if next_mode == "Saved":
+        show_mastery_frame()
+    else:
+        root.geometry("400x270")
+    
+
+    root.after(10, lambda: apply_rounded_corners(root, 15))
+
+def show_mastery_frame():
+    mastery_frame.pack(side="bottom", fill="x", padx=10, pady=5)
+    root.geometry("400x350")
+
+def hide_mastery_frame():
+    mastery_frame.pack_forget()
+    root.geometry("400x270")
+    root.update_idletasks()
+    apply_rounded_corners(root, 15)
+
 def reset_to_welcome():
     fact_label.config(text="Welcome to Fact Generator!", 
                       font=("Trebuchet MS", adjust_font_size("Welcome to Fact Generator!")))
@@ -348,6 +370,26 @@ def reset_to_welcome():
     mode_var.set("New Random")  # Reset to default mode
     category_var.set("Random")  # Reset to default category
     update_category_dropdown()
+    hide_mastery_frame()  # Hide mastery frame on welcome screen
+
+def update_mastery_level(increment):
+    global current_saved_fact_id
+    if current_saved_fact_id:
+        execute_query("EXEC UpdateMasteryLevel @SavedFactID=?, @Increment=?", 
+                      (current_saved_fact_id, increment), fetch=False)
+        new_mastery_level = execute_query("SELECT MasteryLevel FROM SavedFacts WHERE SavedFactID=?", 
+                                          (current_saved_fact_id,))[0][0]
+        update_mastery_progress(new_mastery_level)
+
+def update_mastery_progress(mastery_level):
+    mastery_progress['value'] = mastery_level
+    mastery_label.config(text=f"Mastery: {mastery_level}%")
+
+def on_know_click():
+    update_mastery_level(1)
+
+def on_forgot_click():
+    update_mastery_level(-5)
 
 # Main window setup
 root = tk.Tk()
@@ -399,7 +441,6 @@ star_button = tk.Button(fact_frame, image=white_star_icon, bg='#1e1e1e', command
 star_button.place(relx=1.0, rely=0, anchor="ne", x=-30, y=5)
 
 # Speaker button
-speaker_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/speaker_icon.png").resize((20, 20), Image.Resampling.LANCZOS))
 speaker_button = tk.Button(fact_frame, image=speaker_icon, bg='#1e1e1e', command=speak_fact, 
                            cursor="hand2", borderwidth=0, highlightthickness=0)
 speaker_button.image = speaker_icon
@@ -432,19 +473,44 @@ create_button(button_frame, "Generate/Next Fact", generate_new_fact, bg='#b66d20
 
 save_status_label = create_label(control_frame, "", fg="#b66d20", font=("Trebuchet MS", 10), side='bottom')
 
+# Mastery frame
+mastery_frame = tk.Frame(root, bg="#1e1e1e")  # Change parent to root instead of control_frame
+
+# Create a sub-frame for the buttons
+button_frame = tk.Frame(mastery_frame, bg="#1e1e1e")
+button_frame.pack(side="top", fill="x", expand=True)
+
+# Update the buttons
+know_button = tk.Button(button_frame, text="I Know", command=on_know_click, bg='#4CAF50', fg="white", 
+                        cursor="hand2", borderwidth=0, highlightthickness=0, padx=10, pady=5)
+know_button.pack(side="left", expand=True, fill="x", padx=(0, 5))
+
+forgot_button = tk.Button(button_frame, text="I Forgot", command=on_forgot_click, bg='#F44336', fg="white", 
+                          cursor="hand2", borderwidth=0, highlightthickness=0, padx=10, pady=5)
+forgot_button.pack(side="left", expand=True, fill="x")
+
+# Update the progress bar to be below the buttons
+mastery_progress = ttk.Progressbar(mastery_frame, orient="horizontal", length=200, mode="determinate")
+mastery_progress.pack(side="top", fill="x", expand=True, pady=(5, 0))
+
+# Update the mastery label to be below the progress bar
+mastery_label = tk.Label(mastery_frame, text="Mastery: 0%", fg="white", bg="#1e1e1e", font=("Trebuchet MS", 10))
+mastery_label.pack(side="top", pady=(5, 0))
+
 # Set initial transparency
 root.attributes('-alpha', 0.65)
 
 # Bind focus events to the root window
-root.bind("<FocusIn>", on_focus_in)
-root.bind("<FocusOut>", on_focus_out)
+root.bind("<FocusIn>", lambda event: root.attributes('-alpha', 1.0))
+root.bind("<FocusOut>", lambda event: root.attributes('-alpha', 0.65))
 
 # Final setup
 root.update_idletasks()
 apply_rounded_corners(root, 15)
 set_static_position()
 root.bind("<s>", set_static_position)
-update_ui_elements()
 update_star_icon()
 update_category_dropdown()
+hide_mastery_frame()  # Initially hide the mastery frame
+root.after(100, update_ui)
 root.mainloop()
