@@ -58,6 +58,11 @@ CREATE TABLE SavedFacts (
 )
 GO
 
+-- Add MasteryLevel column to SavedFacts table
+ALTER TABLE SavedFacts
+ADD MasteryLevel INT NOT NULL DEFAULT 0;
+GO
+
 -- Create Stored Procedures
 CREATE PROCEDURE [dbo].[AutoPopulateFactTags]
 AS
@@ -148,4 +153,20 @@ BEGIN
 END
 GO
 
+-- Create a stored procedure to update mastery level
+CREATE PROCEDURE UpdateMasteryLevel
+    @SavedFactID INT,
+    @Increment INT
+AS
+BEGIN
+    UPDATE SavedFacts
+    SET MasteryLevel = CASE
+        WHEN MasteryLevel + @Increment < 0 THEN 0
+        WHEN MasteryLevel + @Increment > 100 THEN 100
+        ELSE MasteryLevel + @Increment
+    END
+    WHERE SavedFactID = @SavedFactID;
+END
+GO
+    
 PRINT 'FactsGenerator database has been recreated with all tables and stored procedures.'
