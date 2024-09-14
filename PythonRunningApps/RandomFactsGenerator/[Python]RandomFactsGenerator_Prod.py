@@ -4,8 +4,6 @@ import ctypes
 from ctypes import wintypes
 import requests
 import webbrowser
-import os
-import random
 import pyttsx3
 from PIL import Image, ImageTk
 import pyodbc
@@ -138,7 +136,6 @@ def is_fact_saved(fact_id, fact_text=None):
         return result[0][0] > 0
     return False
 
-
 def update_star_icon():
     global fact_saved
     current_mode = mode_var.get()
@@ -217,7 +214,7 @@ def toggle_save_fact():
             # For other modes, only delete from SavedFacts
             execute_query("DELETE FROM SavedFacts WHERE FactID = ?", (current_fact_id,), fetch=False)
         
-        save_status_label.config(text="Fact Unsaved", fg="#b66d20")
+        save_status_label.config(text="Fact Unsaved!", fg="#b66d20")
         fact_saved = False
     
     update_star_icon()
@@ -331,18 +328,6 @@ def create_label(parent, text, fg="white", cursor=None, font=("Trebuchet MS", 7)
     label.pack(side=side)
     return label
 
-
-def create_button(parent, text, command, bg='#007bff', side='left'):
-    return tk.Button(parent, text=text, bg=bg, fg="white", command=command, 
-                     cursor="hand2", borderwidth=0, highlightthickness=0, padx=10, pady=5).pack(side=side, padx=10, pady=0.5)
-
-def create_label(parent, text, fg="white", cursor=None, font=("Trebuchet MS", 7), side='left'):
-    label = tk.Label(parent, text=text, fg=fg, bg="#1e1e1e", font=font)
-    if cursor:
-        label.configure(cursor=cursor)
-    label.pack(side=side)
-    return label
-
 def update_category_dropdown(event=None):
     current_mode = mode_var.get()
     load_categories(current_mode)
@@ -355,16 +340,27 @@ def update_category_dropdown(event=None):
         category_var.set("Random")
         category_dropdown.config(state="readonly")
 
-# Assume 'root' is your main Tkinter window
+def reset_to_welcome():
+    fact_label.config(text="Welcome to Fact Generator!", 
+                      font=("Trebuchet MS", adjust_font_size("Welcome to Fact Generator!")))
+    save_status_label.config(text="")
+    update_star_icon()
+    mode_var.set("New Random")  # Reset to default mode
+    category_var.set("Random")  # Reset to default category
+    update_category_dropdown()
+
+# Main window setup
 root = tk.Tk()
 root.geometry("400x270")
 root.overrideredirect(True)
 root.configure(bg='#1e1e1e')
 
-# Load star icons
+# Load icons
 white_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/White-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
 gold_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/Gold-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
 black_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/Black-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
+home_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/home.png").resize((20, 20), Image.Resampling.LANCZOS))
+speaker_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/speaker_icon.png").resize((20, 20), Image.Resampling.LANCZOS))
 
 # Title bar
 title_bar = tk.Frame(root, bg='#000000', height=30, relief='raised')
@@ -384,8 +380,6 @@ mode_button.pack(side="right", padx=5, pady=3)
 category_frame = tk.Frame(title_bar, bg='#2196F3')
 category_frame.pack(side="right", padx=5, pady=3)
 
-
-# In the UI setup section, replace the category_dropdown creation with:
 category_var = tk.StringVar(root, value="Random")
 category_dropdown = ttk.Combobox(category_frame, textvariable=category_var, state="readonly", width=15)
 category_dropdown.bind("<<ComboboxSelected>>", lambda event: generate_new_fact())
@@ -410,6 +404,11 @@ speaker_button = tk.Button(fact_frame, image=speaker_icon, bg='#1e1e1e', command
                            cursor="hand2", borderwidth=0, highlightthickness=0)
 speaker_button.image = speaker_icon
 speaker_button.place(relx=1.0, rely=0, anchor="ne", x=-5, y=5)
+
+# Home button (repositioned)
+home_button = tk.Button(fact_frame, image=home_icon, bg='#1e1e1e', bd=0, highlightthickness=0, 
+                        cursor="hand2", activebackground='#1e1e1e', command=reset_to_welcome)
+home_button.place(relx=0, rely=0, anchor="nw", x=5, y=5)
 
 # Bottom frame
 bottom_frame = tk.Frame(root, bg="#1e1e1e")
@@ -448,5 +447,4 @@ root.bind("<s>", set_static_position)
 update_ui_elements()
 update_star_icon()
 update_category_dropdown()
-
 root.mainloop()
