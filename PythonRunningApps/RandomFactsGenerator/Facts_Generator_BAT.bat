@@ -1,2 +1,2 @@
 @echo off
-start pythonw "C:\Users\gaura\Desktop\PythonRunningApps\RandomFactsGenerator\RandomFactsGenerator.py"
+start pythonw "C:\Users\gaura\OneDrive\PC-Desktop\PythonRunningApps\RandomFactsGenerator\RandomFactsGenerator_PreProd.py"
