@@ -18,12 +18,17 @@ CONN_STR = (
     r'Trusted_Connection=yes;'
 )
 MODES = ["API", "New Random", "Saved"]
-CATEGORIES = ["Random", "History", "Animals", "Technology", "Science", "API"]
 
 # Global variables
 fact_saved = False
 x_window, y_window = 0, 0
 current_fact_id = None
+
+def on_focus_in(event):
+    root.attributes('-alpha', 1.0)
+
+def on_focus_out(event):
+    root.attributes('-alpha', 0.65)
 
 def apply_rounded_corners(root, radius):
     hWnd = wintypes.HWND(int(root.frame(), 16))
@@ -173,7 +178,7 @@ def toggle_save_fact():
             # For new API facts that aren't in the database yet
             api_category_id = execute_query("SELECT CategoryID FROM Categories WHERE CategoryName = 'API'")[0][0]
             current_fact_id = execute_query(
-                "INSERT INTO Facts (FactText, CategoryID, Difficulty, IsVerified) OUTPUT INSERTED.FactID VALUES (?, ?, 'Medium', 0)",
+                "INSERT INTO Facts (FactText, CategoryID, IsVerified) OUTPUT INSERTED.FactID VALUES (?, ?, 0)",
                 (current_api_fact, api_category_id)
             )[0][0]
         elif not current_fact_id:
@@ -270,6 +275,8 @@ def toggle_mode(event=None):
     next_mode = MODES[(current_index + 1) % len(MODES)]
     mode_var.set(next_mode)
     mode_button.config(text=f"Mode: {next_mode}")
+    update_category_dropdown()
+    generate_new_fact()
 
     if next_mode == "API":
         category_var.set("Unavailable")
@@ -280,22 +287,24 @@ def toggle_mode(event=None):
         category_dropdown.config(state="readonly")
 
     generate_new_fact()
+    update_category_dropdown()
 
 def load_categories(mode):
     global CATEGORIES
     if mode == "New Random":
-        query = "SELECT DISTINCT CategoryName FROM Categories"
+        query = "SELECT DISTINCT CategoryName FROM Categories WHERE IsActive = 1"
     elif mode == "Saved":
         query = """
         SELECT DISTINCT c.CategoryName
         FROM SavedFacts sf
         JOIN Facts f ON sf.FactID = f.FactID
         JOIN Categories c ON f.CategoryID = c.CategoryID
+        WHERE c.IsActive = 1
         """
-    else:
-        CATEGORIES = ["No Categories Available"]
+    else:  # API mode
+        CATEGORIES = ["API"]
         return
-
+    
     categories = execute_query(query)
     CATEGORIES = [category[0] for category in categories] if categories else ["No Categories Available"]
     CATEGORIES.insert(0, "Random")  # Add "Random" as the first option
@@ -336,17 +345,17 @@ def create_label(parent, text, fg="white", cursor=None, font=("Trebuchet MS", 7)
 
 def update_category_dropdown(event=None):
     current_mode = mode_var.get()
+    load_categories(current_mode)
+    
     if current_mode == "API":
-        category_var.set("Unavailable")
+        category_var.set("API")
         category_dropdown.config(state="disabled")
-    elif fact_label.cget("text") == "Welcome to Fact Generator!":
+    else:
+        category_dropdown['values'] = CATEGORIES
         category_var.set("Random")
         category_dropdown.config(state="readonly")
-    else:
-        category_dropdown.config(state="readonly")
 
-
-# UI Setup
+# Assume 'root' is your main Tkinter window
 root = tk.Tk()
 root.geometry("400x270")
 root.overrideredirect(True)
@@ -376,9 +385,10 @@ category_frame = tk.Frame(title_bar, bg='#2196F3')
 category_frame.pack(side="right", padx=5, pady=3)
 
 
-category_var = tk.StringVar(root, value=CATEGORIES[0])
-category_dropdown = ttk.Combobox(category_frame, textvariable=category_var, values=CATEGORIES, state="readonly", width=15)
-category_dropdown.bind("<<ComboboxSelected>>", lambda event: (update_category_dropdown(), generate_new_fact()))
+# In the UI setup section, replace the category_dropdown creation with:
+category_var = tk.StringVar(root, value="Random")
+category_dropdown = ttk.Combobox(category_frame, textvariable=category_var, state="readonly", width=15)
+category_dropdown.bind("<<ComboboxSelected>>", lambda event: generate_new_fact())
 category_dropdown.pack()
 
 # Fact display
@@ -423,10 +433,16 @@ create_button(button_frame, "Generate/Next Fact", generate_new_fact, bg='#b66d20
 
 save_status_label = create_label(control_frame, "", fg="#b66d20", font=("Trebuchet MS", 10), side='bottom')
 
+# Set initial transparency
+root.attributes('-alpha', 0.65)
+
+# Bind focus events to the root window
+root.bind("<FocusIn>", on_focus_in)
+root.bind("<FocusOut>", on_focus_out)
+
 # Final setup
 root.update_idletasks()
 apply_rounded_corners(root, 15)
-root.attributes('-alpha', 0.65)
 set_static_position()
 root.bind("<s>", set_static_position)
 update_ui_elements()
