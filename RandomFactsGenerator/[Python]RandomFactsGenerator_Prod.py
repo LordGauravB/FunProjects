@@ -398,11 +398,11 @@ root.overrideredirect(True)
 root.configure(bg='#1e1e1e')
 
 # Load icons
-white_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/White-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
-gold_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/Gold-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
-black_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/Black-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
-home_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/home.png").resize((20, 20), Image.Resampling.LANCZOS))
-speaker_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/PythonRunningApps/RandomFactsGenerator/Resources/speaker_icon.png").resize((20, 20), Image.Resampling.LANCZOS))
+white_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/GitHubBackup/Projects/RandomFactsGenerator/Resources/White-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
+gold_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/GitHubBackup/Projects/RandomFactsGenerator/Resources/Gold-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
+black_star_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/GitHubBackup/Projects/RandomFactsGenerator/Resources/Black-Star.png").resize((20, 20), Image.Resampling.LANCZOS))
+home_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/GitHubBackup/Projects/RandomFactsGenerator/Resources/home.png").resize((20, 20), Image.Resampling.LANCZOS))
+speaker_icon = ImageTk.PhotoImage(Image.open("C:/Users/gaura/OneDrive/PC-Desktop/GitHubBackup/Projects/RandomFactsGenerator/Resources/speaker_icon.png").resize((20, 20), Image.Resampling.LANCZOS))
 
 # Title bar
 title_bar = tk.Frame(root, bg='#000000', height=30, relief='raised')
